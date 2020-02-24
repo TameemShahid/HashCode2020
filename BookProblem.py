@@ -1,3 +1,6 @@
+import threading
+
+#Library class 
 class Library(object):
     
     def __init__(self):
@@ -8,6 +11,8 @@ class Library(object):
         self.ship_books_per_day = 0
         self.books_score = 0
         self.grade = -1
+        self.books_in_score_order = []
+        self.books_scanned_of_lib = []
 
     def Grading(self, booksShippedperDay, avgScoreLibrary , signUpDaysRequired, maxBooksShippedPerDay, AverageBookScore, maxSignUpDaysRequired):
         priorityScore  = (avgScoreLibrary/AverageBookScore)
@@ -17,13 +22,20 @@ class Library(object):
         return grade
 
 
+class Book(object):
+
+    def __init__(self):
+        self.index = -1
+        self.score = -1
+
+
 #list containing all libraries 
 Librarylist = []
 
 maxBooksShippedPerDay = 0
 maxSignUpDaysRequired = 0
 
-file = open("b_read_on.txt")
+file = open("a_example.txt")
 
 line0 = file.readline()
 line0 = line0.split()
@@ -46,6 +58,24 @@ line = line.split()
 books_score = line
 
 
+
+def Sorting_Acc_Score(library_object: Library):
+    library_object.bookSet = list(library_object.bookSet)
+    library_object.bookSet = sorted(library_object.bookSet)
+
+    prev_max = eval(max(books_score)) + 1
+
+    for i in range( len(library_object.bookSet) ):
+        curr_max = 0
+        for j in range( len(library_object.bookSet) ):
+            # library_object.books_in_score_order[i] = library_object.bookSet[j]
+
+            if eval( books_score[ eval(library_object.bookSet[j]) ] ) > curr_max and eval( books_score[ eval(library_object.bookSet[j]) ] ) < prev_max:
+                library_object.books_in_score_order[i] = library_object.bookSet[j]
+                curr_max = eval( books_score[ eval(library_object.bookSet[j]) ] )
+
+        
+        prev_max = curr_max
 
 #following lines calculates Average book
 AverageBookScore = 0
@@ -74,6 +104,13 @@ for i in range(total_libraries):
 
     for eachBook in line:
         lib_obj.bookSet.add(eachBook)
+        # book_obj = Book()
+        # book_obj.index = eachBook
+        # book_obj.score = books_score[eval(eachBook)]
+        lib_obj.books_in_score_order.append(eachBook)
+
+    Sorting_Acc_Score(lib_obj)
+    #lib_obj.books_in_score_order.sort(key=lambda book_obj: book_obj.score, reverse=True)
 
     for eachBook in lib_obj.bookSet:
         lib_obj.books_score += eval( books_score[ eval(eachBook) ] )
@@ -84,15 +121,60 @@ for i in range(total_libraries):
 
     Librarylist.append(lib_obj)
 
+
+
     line = file.readline()
     line = line.split()
 
 libraries_to_run = []
+scanned_books = set()
+signed_libs = []
+
 
 def Scheduler():
     
-    Librarylist.sort(key=lambda lib_obj: lib_obj.grade, reverse=True)
+    libraries_to_run = sorted(Librarylist, key=lambda lib_obj: lib_obj.grade, reverse=True)
+    for eachItem in libraries_to_run:
+        print("library: ", eachItem.index, " grade: ", eachItem.grade)
+    
+    print("TOTAL LIBRARIES: ", len(libraries_to_run))
+    return libraries_to_run
 
-    for eachItem in Librarylist:
-        print("Library " ,eachItem.index," grade ", eachItem.grade)
+def Scan_Books():
+    for eachItem in signed_libs:
+        books_to_scan = eachItem.bookSet.difference(scanned_books)
 
+        print("books to scan: ", len(books_to_scan))
+        for i in range(eachItem.ship_books_per_day):
+            scanned_books.update(books_to_scan)
+
+def Working():
+    scanned_books = set()
+
+    remaining_days = total_scanning_days
+    i = 0
+    while remaining_days > 0:
+        if len(libraries_to_run) > i-1:
+            Scan_Books()
+            signed_libs.append(libraries_to_run[i])
+            remaining_days -= libraries_to_run[i].signup_days
+            print("remaining days: ", remaining_days)
+        else:
+            Scan_Books()
+            remaining_days -= 1
+            print("remaining days: ", remaining_days)
+
+        i+1
+
+def PrintScannedBooks():
+    print("Scanned books: ",(scanned_books))
+    print("Signed up libraries: ", len(signed_libs))
+
+
+outputFile = open("output.txt", "w")
+
+libraries_to_run = Scheduler()
+# Working()
+# PrintScannedBooks()
+
+outputFile.close()
