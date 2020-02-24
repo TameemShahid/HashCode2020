@@ -140,13 +140,19 @@ def Scheduler():
     print("TOTAL LIBRARIES: ", len(libraries_to_run))
     return libraries_to_run
 
-def Scan_Books():
-    for eachItem in signed_libs:
-        books_to_scan = eachItem.bookSet.difference(scanned_books)
+def Scan_Books(days=1):
+    for j in range(days):
+        for eachItem in signed_libs:
+            eachItem.books_in_score_order = set(eachItem.books_in_score_order)
+            books_to_scan = eachItem.books_in_score_order.difference(scanned_books)
 
-        print("books to scan: ", len(books_to_scan))
-        for i in range(eachItem.ship_books_per_day):
-            scanned_books.update(books_to_scan)
+            print("books to scan: ", len(books_to_scan))
+            for i in range(eachItem.ship_books_per_day):
+                try:
+                    scanned_books.update(books_to_scan.pop())
+                    # books_to_scan.remove(books_to_scan[0])
+                except KeyError:
+                    pass
 
 def Working():
     scanned_books = set()
@@ -154,27 +160,38 @@ def Working():
     remaining_days = total_scanning_days
     i = 0
     while remaining_days > 0:
-        if len(libraries_to_run) > i-1:
-            Scan_Books()
-            signed_libs.append(libraries_to_run[i])
+        if len(libraries_to_run) > i:
             remaining_days -= libraries_to_run[i].signup_days
+            Scan_Books( libraries_to_run[i].signup_days )
+            signed_libs.append(libraries_to_run[i])
             print("remaining days: ", remaining_days)
         else:
             Scan_Books()
             remaining_days -= 1
             print("remaining days: ", remaining_days)
 
-        i+1
+        # i = i+1
+        try:
+            libraries_to_run.pop(0)
+        except IndexError:
+            pass
 
 def PrintScannedBooks():
     print("Scanned books: ",(scanned_books))
     print("Signed up libraries: ", len(signed_libs))
 
+def CountScore():
+    score = 0
+    for eachItem in scanned_books:
+        score = score + eval(books_score[ eval(eachItem) ])
+
+    print("FINAL SCORE: ", score)
 
 outputFile = open("output.txt", "w")
 
 libraries_to_run = Scheduler()
-# Working()
-# PrintScannedBooks()
+Working()
+PrintScannedBooks()
+CountScore()
 
 outputFile.close()
