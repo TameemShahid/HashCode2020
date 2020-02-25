@@ -35,7 +35,7 @@ Librarylist = []
 maxBooksShippedPerDay = 0
 maxSignUpDaysRequired = 0
 
-file = open("a_example.txt")
+file = open("b_read_on.txt")
 
 line0 = file.readline()
 line0 = line0.split()
@@ -60,6 +60,7 @@ books_score = line
 
 
 def Sorting_Acc_Score(library_object: Library):
+    print("Sorting library " ,library_object.index," books according to score")
     library_object.bookSet = list(library_object.bookSet)
     library_object.bookSet = sorted(library_object.bookSet)
 
@@ -73,9 +74,14 @@ def Sorting_Acc_Score(library_object: Library):
             if eval( books_score[ eval(library_object.bookSet[j]) ] ) > curr_max and eval( books_score[ eval(library_object.bookSet[j]) ] ) < prev_max:
                 library_object.books_in_score_order[i] = library_object.bookSet[j]
                 curr_max = eval( books_score[ eval(library_object.bookSet[j]) ] )
+            elif eval( books_score[ eval(library_object.bookSet[j]) ] ) == prev_max and not library_object.books_in_score_order.__contains__(library_object.bookSet[j]):
+                library_object.books_in_score_order[i] = library_object.bookSet[j]
+                curr_max = eval( books_score[ eval(library_object.bookSet[j]) ] )
 
         
         prev_max = curr_max
+    print("Library: ", library_object.index, " books in score order: ", library_object.books_in_score_order)
+    print("Sorting Done!")
 
 #following lines calculates Average book
 AverageBookScore = 0
@@ -133,28 +139,31 @@ signed_libs = []
 
 def Scheduler():
     
+    print("Scheduling Libraries")
+
     libraries_to_run = sorted(Librarylist, key=lambda lib_obj: lib_obj.grade, reverse=True)
-    for eachItem in libraries_to_run:
-        print("library: ", eachItem.index, " grade: ", eachItem.grade)
-    
-    print("TOTAL LIBRARIES: ", len(libraries_to_run))
+
+    print("Scheduling Done!")
     return libraries_to_run
 
 def Scan_Books(days=1):
+    print("Scanning Books!")
     for j in range(days):
         for eachItem in signed_libs:
             eachItem.books_in_score_order = set(eachItem.books_in_score_order)
             books_to_scan = eachItem.books_in_score_order.difference(scanned_books)
 
-            print("books to scan: ", len(books_to_scan))
             for i in range(eachItem.ship_books_per_day):
                 try:
-                    scanned_books.update(books_to_scan.pop())
-                    # books_to_scan.remove(books_to_scan[0])
+                    book = books_to_scan.pop()
+                    scanned_books.update(book)
+                    eachItem.books_scanned_of_lib.append(book)
                 except KeyError:
                     pass
+    print("Scanning Books Done!")
 
 def Working():
+    print("Started Actual Work!")
     scanned_books = set()
 
     remaining_days = total_scanning_days
@@ -175,6 +184,7 @@ def Working():
             libraries_to_run.pop(0)
         except IndexError:
             pass
+    print("Work Done!")
 
 def PrintScannedBooks():
     print("Scanned books: ",(scanned_books))
@@ -187,11 +197,31 @@ def CountScore():
 
     print("FINAL SCORE: ", score)
 
-outputFile = open("output.txt", "w")
+def GenerateOutput():
+    outputFile = open("output.txt", "w")
+
+    #printing the total libraries signed up
+    outputFile.writelines( str(len(signed_libs)) + "\n" )
+
+    for eachItem in signed_libs:
+        #printing library index and the count of books it scanned
+        outputFile.writelines( str( eachItem.index ) + " " + str( len( eachItem.books_scanned_of_lib ) ) + "\n" )
+        
+        #printing every book that is scanned by the library
+        for i in range( len(eachItem.books_scanned_of_lib) ):
+            outputFile.writelines( eachItem.books_scanned_of_lib[i] + " " )
+        outputFile.writelines("\n")
+
+    outputFile.close()
+
+def CheckLibScannedBooks():
+    for eachItem in signed_libs:
+        print("Library: ", eachItem.index, "Scanned Books: ", eachItem.books_scanned_of_lib)
+
 
 libraries_to_run = Scheduler()
-Working()
-PrintScannedBooks()
+# Working()
+#PrintScannedBooks()
 CountScore()
-
-outputFile.close()
+CheckLibScannedBooks()
+# GenerateOutput()
