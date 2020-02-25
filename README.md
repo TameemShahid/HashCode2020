@@ -5,9 +5,12 @@
 
 # Scenarios:
 a) A library can take a very large number of days to sign up and have the lowest scoring books
+
 b) A library can take a very large number of days to sign up BUT have the best scoring books 
+
 c) A library can have the best scoring books but can ship only 1 book per day whereas the library with minimum scoring books
    can ship large number of books per day resulting in more score per day than the largest scoring book library
+   
 d) And many more scenarios similar to this
 
 # Basic Algorithm
